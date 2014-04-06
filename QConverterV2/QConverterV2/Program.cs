@@ -39,6 +39,8 @@ namespace QConverterV2
             int transRecordStart;
             string transDate;
             string quantity, companyName, pricePerShare, commission;
+            string transType;
+            bool buy;
 
             //DateTime outDate;
 
@@ -78,6 +80,9 @@ namespace QConverterV2
                 // ** Loop through transactions
                 for (int i = 0; i < transCount; i++)
                 {
+                    buy = true;
+                    transType = null;
+                    
                     transRecordStart = 3 + (i * 8);
 
                     // One transaction
@@ -89,10 +94,14 @@ namespace QConverterV2
                     if (lines[transRecordStart].Contains("Buy") == true)
                     {
                         outFile.WriteLine("NBuy");
+                        transType = "Purchased";
+                        buy = true;
                     }
                     else if (lines[transRecordStart].Contains("Sell") == true)
                     {
                         outFile.WriteLine("NSell");
+                        transType = "Sold";
+                        buy = false;
                     }
 
                     // Stock name
@@ -105,24 +114,38 @@ namespace QConverterV2
 
                     // Total
                     //Console.WriteLine("{0}, {1}", lines[3].IndexOf("(") + 1, lines[3].Length - lines[3].IndexOf("(") - 3);
-                    outFile.WriteLine("T{0}", lines[transRecordStart].Substring(lines[transRecordStart].IndexOf("(") + 2, lines[transRecordStart].Length - lines[transRecordStart].IndexOf("(") - 3));
-
+                    if (buy)
+                    {
+                        outFile.WriteLine("T{0}", lines[transRecordStart].Substring(lines[transRecordStart].IndexOf("(") + 2, lines[transRecordStart].Length - lines[transRecordStart].IndexOf("(") - 3));
+                    }
+                    else
+                    {
+                        outFile.WriteLine("T{0}", lines[transRecordStart].Substring(lines[transRecordStart].LastIndexOf("$") + 1, lines[transRecordStart].Length - lines[transRecordStart].LastIndexOf("$") - 1));
+                    }
                     // Price per share
                     //   Assumes space after price
                     pricePerShare = lines[transRecordStart].Substring(lines[transRecordStart].IndexOf("$") + 1, lines[transRecordStart].IndexOf(",", lines[transRecordStart].IndexOf("$")) - lines[transRecordStart].IndexOf("$") - 2);
                     outFile.WriteLine("I{0}", pricePerShare);
 
                     // Quantity
-                    //quantity = lines[transRecordStart].Substring(lines[transRecordStart].IndexOf(",Buy,") + 5, lines[transRecordStart].IndexOf("$") - lines[transRecordStart].IndexOf(",Buy,") - 6);
-                    //outFile.WriteLine("Q{0}", quantity);
-                    quantity = "Test";
+                    if (buy)
+                    {
+                        quantity = lines[transRecordStart].Substring(lines[transRecordStart].IndexOf(",Buy,") + 5, lines[transRecordStart].IndexOf("$") - lines[transRecordStart].IndexOf(",Buy,") - 6);
+                        outFile.WriteLine("Q{0}", quantity);
+                    }
+                    else
+                    {
+                        quantity = lines[transRecordStart].Substring(lines[transRecordStart].IndexOf("-") + 1, lines[transRecordStart].IndexOf("$") - lines[transRecordStart].IndexOf("-") - 2);
+                        outFile.WriteLine("Q{0}", quantity);
+                    }
 
                     // Commission
-                    commission = lines[transRecordStart + 5].Substring(lines[transRecordStart + 5].IndexOf("(") + 2, lines[transRecordStart + 5].Length - lines[transRecordStart + 5].IndexOf("(") - 3);
+                    //commission = lines[transRecordStart + 5].Substring(lines[transRecordStart + 5].IndexOf("(") + 2, lines[transRecordStart + 5].Length - lines[transRecordStart + 5].IndexOf("(") - 3);
+                    commission = lines[transRecordStart + 5].Substring(lines[transRecordStart + 5].IndexOf("$") + 1, lines[transRecordStart + 5].Length - lines[transRecordStart + 5].IndexOf("$") - 2);
                     outFile.WriteLine("O{0}", commission);
 
                     // Memo
-                    outFile.WriteLine("MPurchase {0} shares of {1} at ${2} each muinus ${3} commission", quantity, companyName, pricePerShare, commission);
+                    outFile.WriteLine("M{0} {1} shares of {2} at ${3} each muinus ${4} commission", transType, quantity, companyName, pricePerShare, commission);
 
                     outFile.WriteLine("^");
                 }
