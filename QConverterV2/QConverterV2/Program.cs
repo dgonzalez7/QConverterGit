@@ -83,8 +83,17 @@ namespace QConverterV2
                     // One transaction
                     outFile.WriteLine("!Type:Invst");
                     outFile.WriteLine("D{0}", outDate.ToShortDateString());
-                    outFile.WriteLine("NBuy");
-
+                    //outFile.WriteLine("NBuy");
+                    
+                    // Transaction type - "Buy" or "Sell"
+                    if (lines[transRecordStart].Contains("Buy") == true)
+                    {
+                        outFile.WriteLine("NBuy");
+                    }
+                    else if (lines[transRecordStart].Contains("Sell") == true)
+                    {
+                        outFile.WriteLine("NSell");
+                    }
 
                     // Stock name
                     companyName = lines[transRecordStart].Substring(0, lines[transRecordStart].IndexOf(","));
@@ -93,13 +102,6 @@ namespace QConverterV2
                         companyName = companyName.Substring(0, companyName.Length - 1);
                     }
                     outFile.WriteLine("Y{0}", companyName);
-
-                    // EDIT HERE
-                    //if (lines[transRecordStart].Contains("Buy") == false)
-                    //{
-                    //    Console.WriteLine("{0}, Buy", companyName);
-                    //}
-
 
                     // Total
                     //Console.WriteLine("{0}, {1}", lines[3].IndexOf("(") + 1, lines[3].Length - lines[3].IndexOf("(") - 3);
